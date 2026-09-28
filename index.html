@@ -3,47 +3,69 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BizBrain AI — Your company's brain, in your pocket</title>
+<title>BizBrain AI — your company's reference library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<header>
-  <h1>BizBrain <span>AI</span></h1>
-  <p>Paste in your SOPs, price lists, policies, and FAQs — then ask questions and get answers from your own documents. 100% local, works offline.</p>
+<header class="masthead">
+  <div class="mast-inner">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      </span>
+      <div>
+        <h1>BizBrain <span>AI</span></h1>
+        <p class="tagline">Your company's reference library — answers from your own documents. 100% local, works offline.</p>
+      </div>
+    </div>
+    <p class="pill local">Local only</p>
+  </div>
 </header>
 
 <div class="wrap">
-  <div class="tabs">
+  <nav class="tabs" aria-label="Sections">
     <button data-tab="ask" class="active">Ask</button>
     <button data-tab="docs">Documents</button>
     <button data-tab="faq">Auto FAQ</button>
     <button data-tab="gaps">Knowledge gaps</button>
-  </div>
+  </nav>
 
   <!-- Ask -->
   <div class="tab active" id="tab-ask">
-    <div class="card">
+    <div class="card ask-hero">
+      <p class="overline">Reference desk</p>
       <h2>Ask your company brain</h2>
-      <p class="sub">Answers are pulled from your documents below, with the source shown. Nothing is sent anywhere.</p>
+      <p class="sub">Answers are pulled from your documents, with the source shown. Nothing is sent anywhere.</p>
       <div class="askbox">
+        <svg class="ask-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
         <input type="text" id="qInput" placeholder="e.g. What is our refund policy?">
         <button class="primary" id="qAsk">Ask</button>
       </div>
-      <div id="qOut" style="margin-top:16px"></div>
+      <div class="tryrow">
+        <span class="muted small">Try:</span>
+        <button class="tryq" data-q="What is our refund policy?">Refund policy</button>
+        <button class="tryq" data-q="What are our opening hours?">Opening hours</button>
+        <button class="tryq" data-q="Do you offer delivery?">Delivery</button>
+      </div>
+      <div id="qOut" class="qout"></div>
     </div>
   </div>
 
   <!-- Documents -->
   <div class="tab" id="tab-docs">
     <div class="card">
+      <p class="overline">The vault</p>
       <h2>Document vault</h2>
       <p class="sub">Paste anything: SOPs, price lists, policies, product notes, email templates. Tag them so answers stay organized.</p>
-      <div class="row">
+      <div class="formgrid">
         <div><label for="dTitle">Title</label><input type="text" id="dTitle" placeholder="e.g. Refund policy"></div>
         <div><label for="dTags">Tags (comma-separated)</label><input type="text" id="dTags" placeholder="e.g. policy, support"></div>
       </div>
-      <div style="margin-top:10px"><label for="dBody">Content (paste it in)</label><textarea id="dBody" placeholder="Paste the full text of the document here..."></textarea></div>
-      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <div class="field"><label for="dBody">Content (paste it in)</label><textarea id="dBody" placeholder="Paste the full text of the document here..."></textarea></div>
+      <div class="btnbar">
         <button class="primary" id="dAdd">Add document</button>
         <button class="ghost" id="dSample">Load sample docs</button>
         <button class="ghost" id="dExport">Export backup (JSON)</button>
@@ -52,18 +74,19 @@
       </div>
     </div>
     <div class="card">
-      <h2>Your documents <span class="muted" id="docCount"></span></h2>
-      <div id="docList"></div>
+      <h2>On the shelves <span class="muted" id="docCount"></span></h2>
+      <div id="docList" class="shelves"></div>
     </div>
   </div>
 
   <!-- Auto FAQ -->
   <div class="tab" id="tab-faq">
     <div class="card">
+      <p class="overline">Reader's digest</p>
       <h2>Auto-generated FAQ</h2>
       <p class="sub">BizBrain scans your documents for the most-mentioned topics and drafts FAQ entries from the best-matching sentences. Edit-worthy, publishable.</p>
-      <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-bottom:14px">
-        <div><label for="faqN">How many</label>
+      <div class="btnbar">
+        <div class="field inline"><label for="faqN">How many</label>
           <select id="faqN"><option>5</option><option selected>8</option><option>12</option></select>
         </div>
         <button class="primary" id="faqGen">Generate FAQ</button>
@@ -76,15 +99,28 @@
   <!-- Knowledge gaps -->
   <div class="tab" id="tab-gaps">
     <div class="card">
+      <p class="overline">Missing pages</p>
       <h2>Knowledge gaps</h2>
       <p class="sub">Questions nobody's documents could answer. Write these up once, and the brain gets smarter forever. Most-asked gaps float to the top.</p>
       <div id="gapList"></div>
-      <div style="margin-top:10px"><button class="danger" id="gapClear">Clear all gaps</button></div>
+      <div class="btnbar"><button class="danger" id="gapClear">Clear all gaps</button></div>
     </div>
   </div>
 </div>
 
+<footer>
+  <p class="muted small">Your vault lives in this browser's localStorage (<code>bizbrain-ai-v1</code>). Export a backup before clearing site data.</p>
+</footer>
+
 <script src="js/logic.js"></script>
 <script src="js/app.js"></script>
+<script>
+document.querySelectorAll('.tryq').forEach(function (b) {
+  b.addEventListener('click', function () {
+    document.getElementById('qInput').value = b.dataset.q;
+    document.getElementById('qAsk').click();
+  });
+});
+</script>
 </body>
 </html>
