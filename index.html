@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BizBrain AI — Your company's brain, in your pocket</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header>
+  <h1>BizBrain <span>AI</span></h1>
+  <p>Paste in your SOPs, price lists, policies, and FAQs — then ask questions and get answers from your own documents. 100% local, works offline.</p>
+</header>
+
+<div class="wrap">
+  <div class="tabs">
+    <button data-tab="ask" class="active">Ask</button>
+    <button data-tab="docs">Documents</button>
+    <button data-tab="faq">Auto FAQ</button>
+    <button data-tab="gaps">Knowledge gaps</button>
+  </div>
+
+  <!-- Ask -->
+  <div class="tab active" id="tab-ask">
+    <div class="card">
+      <h2>Ask your company brain</h2>
+      <p class="sub">Answers are pulled from your documents below, with the source shown. Nothing is sent anywhere.</p>
+      <div class="askbox">
+        <input type="text" id="qInput" placeholder="e.g. What is our refund policy?">
+        <button class="primary" id="qAsk">Ask</button>
+      </div>
+      <div id="qOut" style="margin-top:16px"></div>
+    </div>
+  </div>
+
+  <!-- Documents -->
+  <div class="tab" id="tab-docs">
+    <div class="card">
+      <h2>Document vault</h2>
+      <p class="sub">Paste anything: SOPs, price lists, policies, product notes, email templates. Tag them so answers stay organized.</p>
+      <div class="row">
+        <div><label for="dTitle">Title</label><input type="text" id="dTitle" placeholder="e.g. Refund policy"></div>
+        <div><label for="dTags">Tags (comma-separated)</label><input type="text" id="dTags" placeholder="e.g. policy, support"></div>
+      </div>
+      <div style="margin-top:10px"><label for="dBody">Content (paste it in)</label><textarea id="dBody" placeholder="Paste the full text of the document here..."></textarea></div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="primary" id="dAdd">Add document</button>
+        <button class="ghost" id="dSample">Load sample docs</button>
+        <button class="ghost" id="dExport">Export backup (JSON)</button>
+        <button class="ghost" id="dImportBtn">Import backup</button>
+        <input type="file" id="dImport" accept=".json" style="display:none">
+      </div>
+    </div>
+    <div class="card">
+      <h2>Your documents <span class="muted" id="docCount"></span></h2>
+      <div id="docList"></div>
+    </div>
+  </div>
+
+  <!-- Auto FAQ -->
+  <div class="tab" id="tab-faq">
+    <div class="card">
+      <h2>Auto-generated FAQ</h2>
+      <p class="sub">BizBrain scans your documents for the most-mentioned topics and drafts FAQ entries from the best-matching sentences. Edit-worthy, publishable.</p>
+      <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-bottom:14px">
+        <div><label for="faqN">How many</label>
+          <select id="faqN"><option>5</option><option selected>8</option><option>12</option></select>
+        </div>
+        <button class="primary" id="faqGen">Generate FAQ</button>
+        <button class="ghost" id="faqCopy">Copy all as text</button>
+      </div>
+      <div id="faqOut"><p class="muted">Click "Generate FAQ" to build one from your current documents.</p></div>
+    </div>
+  </div>
+
+  <!-- Knowledge gaps -->
+  <div class="tab" id="tab-gaps">
+    <div class="card">
+      <h2>Knowledge gaps</h2>
+      <p class="sub">Questions nobody's documents could answer. Write these up once, and the brain gets smarter forever. Most-asked gaps float to the top.</p>
+      <div id="gapList"></div>
+      <div style="margin-top:10px"><button class="danger" id="gapClear">Clear all gaps</button></div>
+    </div>
+  </div>
+</div>
+
+<script src="js/logic.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
