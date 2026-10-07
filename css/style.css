@@ -14,7 +14,7 @@
   --green: #3e7d4e;
   --green-soft: #e7f2ea;
   --red: #b04a3e;
-  --radius: 18px;
+  --radius: 0;
   --shadow: 0 1px 2px rgba(30, 42, 58, .06), 0 14px 34px -20px rgba(30, 42, 58, .25);
   --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
@@ -42,7 +42,7 @@ input, textarea, select { font-family: var(--sans); }
 }
 .brand { display: flex; gap: 14px; align-items: center; }
 .brand-mark {
-  width: 48px; height: 48px; flex: none; border-radius: 14px;
+  width: 48px; height: 48px; flex: none; border-radius: 0;
   background: var(--copper); color: #fff; display: grid; place-items: center;
   box-shadow: 0 6px 18px -6px rgba(178, 106, 36, .7);
 }
@@ -53,7 +53,7 @@ input, textarea, select { font-family: var(--sans); }
 .pill {
   flex: none; margin-top: 6px; font-size: 12px; font-weight: 700;
   color: #bfe3c9; background: rgba(62, 125, 78, .18); border: 1px solid rgba(62, 125, 78, .5);
-  padding: 6px 13px; border-radius: 999px; display: inline-flex; align-items: center; gap: 7px;
+  padding: 6px 13px; border-radius: 0; display: inline-flex; align-items: center; gap: 7px;
 }
 .pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #5cb56f; }
 
@@ -75,11 +75,11 @@ input, textarea, select { font-family: var(--sans); }
 /* ---------- tabs ---------- */
 .tabs {
   display: inline-flex; gap: 4px; background: #efe9db; border: 1px solid var(--line);
-  border-radius: 999px; padding: 4px; margin-bottom: 18px;
+  border-radius: 0; padding: 4px; margin-bottom: 18px;
 }
 .tabs button {
   border: 0; background: transparent; color: var(--muted);
-  border-radius: 999px; padding: 10px 20px; font-size: 14px; font-weight: 700;
+  border-radius: 0; padding: 10px 20px; font-size: 14px; font-weight: 700;
   transition: all .15s ease;
 }
 .tabs button.active { background: var(--navy); color: #fff; box-shadow: 0 3px 10px rgba(30, 42, 58, .3); }
@@ -91,7 +91,7 @@ input, textarea, select { font-family: var(--sans); }
 .ask-hero { border-top: 5px solid var(--copper); }
 .askbox {
   display: flex; align-items: center; gap: 0;
-  border: 2px solid var(--line); border-radius: 16px; background: #fff;
+  border: 2px solid var(--line); border-radius: 0; background: #fff;
   padding: 6px 6px 6px 16px; transition: border-color .15s ease, box-shadow .15s ease;
 }
 .askbox:focus-within { border-color: var(--copper); box-shadow: 0 0 0 4px rgba(178, 106, 36, .12); }
@@ -102,7 +102,7 @@ input, textarea, select { font-family: var(--sans); }
 }
 .askbox input::placeholder { color: #b3a98f; }
 .primary {
-  border: 0; border-radius: 12px; background: var(--copper); color: #fff;
+  border: 0; border-radius: 0; background: var(--copper); color: #fff;
   font-size: 15px; font-weight: 700; padding: 13px 26px;
   transition: background .15s ease, transform .12s ease;
 }
@@ -111,7 +111,7 @@ input, textarea, select { font-family: var(--sans); }
 .tryrow { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 .tryq {
   border: 1px solid var(--line); background: var(--paper); color: var(--copper-deep);
-  border-radius: 999px; padding: 7px 15px; font-size: 13px; font-weight: 600;
+  border-radius: 0; padding: 7px 15px; font-size: 13px; font-weight: 600;
 }
 .tryq:hover { border-color: var(--copper); background: var(--copper-soft); }
 .qout { margin-top: 8px; }
@@ -119,7 +119,7 @@ input, textarea, select { font-family: var(--sans); }
 /* answers = citation cards */
 .answer {
   border: 1px solid var(--line); border-left: 5px solid var(--copper);
-  border-radius: 14px; padding: 18px 20px; margin-top: 14px; background: #fffdf8;
+  border-radius: 0; padding: 18px 20px; margin-top: 14px; background: #fffdf8;
   animation: fadeup .25s ease; position: relative;
 }
 .answer .src { font-size: 11.5px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); }
@@ -131,16 +131,16 @@ input, textarea, select { font-family: var(--sans); }
 .answer .rel {
   position: absolute; top: 16px; right: 18px;
   font-size: 12px; font-weight: 800; color: var(--copper-deep);
-  background: var(--copper-soft); border-radius: 999px; padding: 4px 12px;
+  background: var(--copper-soft); border-radius: 0; padding: 4px 12px;
 }
 .warnbox {
   border: 1px solid #ecd9b8; background: #fdf6e7; color: #7a5a1e;
-  border-radius: 14px; padding: 16px 18px; margin-top: 14px; font-size: 14.5px;
+  border-radius: 0; padding: 16px 18px; margin-top: 14px; font-size: 14.5px;
 }
 .warnbox + .primary { margin-top: 12px; }
 .notice {
   border: 1px solid #cfe4d3; background: var(--green-soft); color: #2c5c38;
-  border-radius: 14px; padding: 16px 18px; margin-top: 14px; font-size: 14.5px;
+  border-radius: 0; padding: 16px 18px; margin-top: 14px; font-size: 14.5px;
 }
 
 /* ---------- forms ---------- */
@@ -150,7 +150,7 @@ input, textarea, select { font-family: var(--sans); }
 label { display: block; font-size: 12.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .7px; margin-bottom: 6px; }
 .field.inline label { margin-bottom: 0; }
 input[type="text"], textarea, select {
-  width: 100%; border: 2px solid var(--line); border-radius: 12px;
+  width: 100%; border: 2px solid var(--line); border-radius: 0;
   padding: 12px 14px; font-size: 14.5px; background: #fff; color: var(--ink);
 }
 textarea { min-height: 130px; resize: vertical; }
@@ -159,14 +159,14 @@ select { width: auto; padding: 10px 12px; }
 .btnbar { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; align-items: flex-end; }
 .ghost {
   border: 2px solid var(--line); background: #fff; color: var(--ink);
-  border-radius: 12px; padding: 11px 18px; font-size: 14px; font-weight: 700;
+  border-radius: 0; padding: 11px 18px; font-size: 14px; font-weight: 700;
   transition: border-color .15s ease;
 }
 .ghost:hover { border-color: var(--copper); color: var(--copper-deep); }
-.ghost.small, .danger.small { padding: 7px 14px; font-size: 13px; border-radius: 10px; }
+.ghost.small, .danger.small { padding: 7px 14px; font-size: 13px; border-radius: 0; }
 .danger {
   border: 1px solid #e3bcb4; background: none; color: var(--red);
-  border-radius: 12px; padding: 11px 18px; font-size: 14px; font-weight: 700;
+  border-radius: 0; padding: 11px 18px; font-size: 14px; font-weight: 700;
 }
 .danger:hover { background: #fbeeee; }
 
@@ -174,7 +174,7 @@ select { width: auto; padding: 10px 12px; }
 .shelves { display: grid; gap: 12px; }
 .docitem {
   display: flex; align-items: center; justify-content: space-between; gap: 14px;
-  border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px;
+  border: 1px solid var(--line); border-radius: 0; padding: 16px 18px;
   background: #fffdf8; transition: box-shadow .15s ease;
 }
 .docitem:hover { box-shadow: var(--shadow); }
@@ -182,12 +182,12 @@ select { width: auto; padding: 10px 12px; }
 .docitem .m { color: var(--muted); font-size: 12.5px; margin-top: 4px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .tag {
   font-size: 11.5px; font-weight: 700; color: var(--copper-deep);
-  background: var(--copper-soft); border-radius: 999px; padding: 2px 10px;
+  background: var(--copper-soft); border-radius: 0; padding: 2px 10px;
 }
 
 /* ---------- FAQ ---------- */
 .faq {
-  border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px;
+  border: 1px solid var(--line); border-radius: 0; padding: 18px 20px;
   margin-top: 12px; background: #fffdf8; animation: fadeup .25s ease;
 }
 .faq .q { font-family: var(--serif); font-size: 18px; font-weight: 700; margin-bottom: 6px; }
@@ -205,13 +205,13 @@ select { width: auto; padding: 10px 12px; }
 #gapList td strong {
   display: inline-block; min-width: 40px; text-align: center;
   background: var(--copper-soft); color: var(--copper-deep);
-  border-radius: 999px; padding: 3px 10px; font-size: 13px;
+  border-radius: 0; padding: 3px 10px; font-size: 13px;
 }
 #gapList td:last-child { text-align: right; white-space: nowrap; }
 
 /* ---------- footer ---------- */
 footer { max-width: 880px; margin: 0 auto; padding: 6px 22px 44px; text-align: center; }
-code { background: #f0ebdd; border-radius: 6px; padding: 1px 7px; font-size: 12px; }
+code { background: #f0ebdd; border-radius: 0; padding: 1px 7px; font-size: 12px; }
 
 /* ---------- focus / motion / responsive ---------- */
 button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
