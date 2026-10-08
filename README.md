@@ -14,6 +14,11 @@ A document vault with instant keyword Q&A: paste SOPs, price lists, policies, FA
 3. **Honest no-match** — when nothing matches, it says so and offers to log the question as a knowledge gap instead of hallucinating.
 4. **Knowledge gaps** — repeat questions collapse and float to the top; "mark written up" clears them once documented.
 5. **Auto FAQ** — scans the vault for the most-mentioned topics and drafts FAQ entries from the best-matching sentences, with sources; one-click copy.
+7. **Tag-filtered Ask** — restrict answers to documents carrying a chosen tag.
+8. **Question history** — every question is logged with its answer status; tap one to re-ask.
+9. **Vault search** — filter documents by title, tag, or content as you type.
+10. **Duplicate document** — clone a document as a starting point for a similar one.
+11. **FAQ print view** — print stylesheet turns the generated FAQ into a clean handout.
 6. **Backup** — export/import the whole vault as JSON.
 
 ## Pricing vision
