@@ -61,6 +61,38 @@ const dup = Z.deleteDoc(docs, 'no-such-id');
 (docs.length === before - 1 && v.length === 1 && dup === false)
   ? ok('flow7: delete removes 1; short body -> 1 error; bad id -> false') : bad('flow7');
 
+// Flow 8: tag-filtered ask narrows the search pool
+let tdocs = Z.sampleDocs();
+const t1 = Z.ask(tdocs, 'money back', 3, 'support');
+const t2 = Z.ask(tdocs, 'money back', 3, 'pricing');
+const t3 = Z.ask(tdocs, 'opening hours saturday', 3, 'hours');
+(t1.answers.length === 1 && t1.answers[0].title === 'Refund policy' &&
+  t2.noMatch && t3.answers.length === 1 && t3.answers[0].title === 'Opening hours')
+  ? ok('flow8: tag filter keeps only matching-tag docs') : bad('flow8');
+
+// Flow 9: duplicate + search a doc, then ask the copy
+const cp = Z.duplicateDoc(tdocs, 'doc-sample-2');
+const found = Z.searchDocs(tdocs, 'Pricing 2026 (copy)');
+(cp && found.length === 1 && found[0].id === cp.id)
+  ? ok('flow9: duplicate findable via search by its (copy) title') : bad('flow9');
+
+// Flow 10: question history trims to the newest 20
+let hist = [];
+for (let i = 0; i < 25; i++) hist.push({ query: 'q' + i });
+hist = Z.trimHistory(hist, 20);
+(hist.length === 20 && hist[0].query === 'q5' && hist[19].query === 'q24')
+  ? ok('flow10: history trimmed to newest 20') : bad('flow10');
+
+// Flow 11: document search is case-insensitive across title/tags/body
+// (tdocs includes the "Pricing 2026 (copy)" duplicate from flow 9)
+const s1 = Z.searchDocs(tdocs, 'REFUND');
+const s2 = Z.searchDocs(tdocs, 'credit cards');
+const s3 = Z.searchDocs(tdocs, 'policy');
+(s1.length === 1 && s1[0].title === 'Refund policy' &&
+  s2.length === 2 && s2.every(d => d.title.indexOf('Pricing 2026') === 0) &&
+  s3.length === 1 && s3[0].title === 'Refund policy')
+  ? ok('flow11: search hits title, body, and tag case-insensitively') : bad('flow11');
+
 console.log('');
 console.log('e2e: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

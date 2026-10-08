@@ -101,6 +101,11 @@ input, textarea, select { font-family: var(--sans); }
   background: transparent; color: var(--ink); min-width: 0;
 }
 .askbox input::placeholder { color: #b3a98f; }
+.askbox select {
+  border: 0; border-left: 1px solid var(--line); background: transparent;
+  font-size: 13.5px; font-weight: 600; color: var(--copper-deep);
+  padding: 12px 8px; outline: 0; cursor: pointer; max-width: 130px;
+}
 .primary {
   border: 0; border-radius: 0; background: var(--copper); color: #fff;
   font-size: 15px; font-weight: 700; padding: 13px 26px;
@@ -212,6 +217,40 @@ select { width: auto; padding: 10px 12px; }
 /* ---------- footer ---------- */
 footer { max-width: 880px; margin: 0 auto; padding: 6px 22px 44px; text-align: center; }
 code { background: #f0ebdd; border-radius: 0; padding: 1px 7px; font-size: 12px; }
+
+/* ---------- question history ---------- */
+.qhist-wrap { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; }
+.qhist-head { display: flex; justify-content: space-between; align-items: center; }
+.qhist-head h3 { font-size: 14px; margin: 0; }
+.qhist { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.qhist .muted.small { margin: 0; }
+.qhist-item {
+  border: 1px solid var(--line); border-radius: 0; background: #fff;
+  padding: 9px 12px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  text-align: left; cursor: pointer; width: 100%; font-family: var(--sans);
+}
+.qhist-item:hover { border-color: var(--copper); background: var(--copper-soft); }
+.qhist-item .qh-q { font-weight: 600; font-size: 14px; color: var(--ink); }
+.qhist-item .qh-m { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.qhist-item.unanswered .qh-q { color: var(--copper-deep); }
+
+/* ---------- document search ---------- */
+.docsearch { margin: 12px 0; }
+.docsearch input {
+  width: 100%; border: 2px solid var(--line); border-radius: 0;
+  padding: 11px 14px; font-size: 14.5px; background: #fff; color: var(--ink);
+}
+.docsearch input:focus { outline: none; border-color: var(--copper); box-shadow: 0 0 0 4px rgba(178, 106, 36, .12); }
+
+/* ---------- print: clean FAQ handout ---------- */
+@media print {
+  .masthead, .tabs, .askbox, .tryrow, .qhist-wrap, footer,
+  #tab-ask, #tab-docs, #tab-gaps, button, .btnbar { display: none !important; }
+  body { background: #fff; font-size: 13px; }
+  .tab { display: block !important; }
+  .card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
+  .faq { break-inside: avoid; }
+}
 
 /* ---------- focus / motion / responsive ---------- */
 button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {

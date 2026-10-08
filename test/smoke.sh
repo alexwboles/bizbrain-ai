@@ -59,10 +59,60 @@ const impBad = Z.importJSON('not json{{{');
 (bad1.length === 2 && good.ok && imp.ok && imp.docs.length === 1 && !impBad.ok)
   ? ok('validateDoc/addDoc/export/import all behave') : bad('doc lifecycle');
 
+// 13: tag-filtered ask searches only tagged docs
+const tf1 = Z.ask(docs, 'money back guarantee', 3, 'support');
+const tf2 = Z.ask(docs, 'money back guarantee', 3, 'pricing');
+const tf3 = Z.ask(docs, 'money back guarantee', 3, 'nonexistent-tag');
+(tf1.answers.length > 0 && tf1.answers[0].title === 'Refund policy' &&
+  tf2.noMatch && tf3.noMatch && tf3.reason === 'notag')
+  ? ok('ask with tagFilter: support tag answers, pricing tag noMatch, unknown tag notag') : bad('tagFilter');
+
+// 14: duplicateDoc copies a doc with a fresh id and (copy) title
+const ddocs = Z.sampleDocs().slice();
+const c0 = ddocs.length;
+const cp = Z.duplicateDoc(ddocs, 'doc-sample-1');
+(cp && ddocs.length === c0 + 1 && cp.id !== 'doc-sample-1' && cp.title === 'Refund policy (copy)' &&
+  cp.body === ddocs[0].body && cp.tags !== ddocs[0].tags && Z.duplicateDoc(ddocs, 'nope') === null)
+  ? ok('duplicateDoc: fresh id, (copy) title, cloned tags') : bad('duplicateDoc');
+
+// 15: searchDocs finds by title, tag, and body; empty query returns all
+const sdocs = Z.sampleDocs();
+(Z.searchDocs(sdocs, 'refund').length === 1 &&
+  Z.searchDocs(sdocs, 'SUPPORT').length === 1 &&
+  Z.searchDocs(sdocs, 'veterans').length === 1 &&
+  Z.searchDocs(sdocs, 'zzz-nope').length === 0 &&
+  Z.searchDocs(sdocs, '').length === 3)
+  ? ok('searchDocs: title/tag/body hits, case-insensitive, empty=all') : bad('searchDocs');
+
+// 16: allTags lists distinct lowercase tags; trimHistory caps the list
+const at = Z.allTags(Z.sampleDocs());
+(at.length === 5 && at[0] === 'contact' && at[4] === 'support' && Z.allTags([]).length === 0)
+  ? ok('allTags: 5 distinct tags sorted') : bad('allTags=' + JSON.stringify(at));
+const th = Z.trimHistory([1, 2, 3, 4, 5], 3);
+(th.length === 3 && th[0] === 3 && Z.trimHistory(null, 3).length === 0)
+  ? ok('trimHistory: keeps newest N, handles null') : bad('trimHistory');
+
 console.log('node checks: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
 EOF
 [ $? -eq 0 ] && ok "node logic checks" || bad "node logic checks"
+
+# 13+: new UI wiring present
+node << 'EOF2'
+const fs = require('fs');
+const h = fs.readFileSync('/home/hatch/workspace/bizbrain-ai/index.html', 'utf8');
+const a = fs.readFileSync('/home/hatch/workspace/bizbrain-ai/js/app.js', 'utf8');
+const c = fs.readFileSync('/home/hatch/workspace/bizbrain-ai/css/style.css', 'utf8');
+for (const id of ['qTag', 'qHist', 'qHistClear', 'dSearch', 'faqPrint']) {
+  if (!h.includes('id="' + id + '"')) { console.log('missing ' + id); process.exit(1); }
+}
+if (!a.includes('duplicateDoc(state.docs') || !a.includes('renderQHistory()')) {
+  console.log('app wiring missing'); process.exit(1);
+}
+if (!c.includes('@media print')) { console.log('print css missing'); process.exit(1); }
+console.log('ui wiring ok');
+EOF2
+[ $? -eq 0 ] && ok "new controls wired (qTag, qHist, dSearch, faqPrint, duplicate)" || bad "new controls wiring"
 
 echo ""
 echo "smoke: $PASS passed, $FAIL failed"

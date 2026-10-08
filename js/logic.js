@@ -67,12 +67,20 @@
   }
 
   // Ask a question over the vault. Returns { answers:[{docId,title,tags,score,excerpt}], noMatch }.
-  function ask(docs, query, topN) {
+  // tagFilter: optional tag string — only documents carrying it are searched.
+  function ask(docs, query, topN, tagFilter) {
     topN = topN || 3;
     var qt = tokenize(query);
     if (!qt.length) return { answers: [], noMatch: true, reason: 'empty' };
+    var pool = docs;
+    if (tagFilter) {
+      pool = docs.filter(function (d) {
+        return (d.tags || []).some(function (t) { return String(t).toLowerCase() === String(tagFilter).toLowerCase(); });
+      });
+      if (!pool.length) return { answers: [], noMatch: true, reason: 'notag' };
+    }
     var ranked = [];
-    docs.forEach(function (d) {
+    pool.forEach(function (d) {
       var sc = scoreDoc(qt, d);
       if (sc > 0) ranked.push({ docId: d.id, title: d.title, tags: d.tags || [], score: sc, excerpt: bestExcerpt(qt, d) });
     });
@@ -161,6 +169,54 @@
     return false;
   }
 
+  // Copy a document as a starting point for a similar one. Returns the new doc or null.
+  function duplicateDoc(docs, id) {
+    var src = null;
+    for (var i = 0; i < docs.length; i++) {
+      if (docs[i].id === id) { src = docs[i]; break; }
+    }
+    if (!src) return null;
+    var copy = {
+      id: uid('doc'),
+      title: src.title + ' (copy)',
+      body: src.body,
+      tags: (src.tags || []).slice(),
+      createdAt: new Date().toISOString()
+    };
+    docs.push(copy);
+    return copy;
+  }
+
+  // Full-text search across the vault: title, tags, and body. Empty query = all docs.
+  function searchDocs(docs, query) {
+    var q = String(query || '').trim().toLowerCase();
+    if (!q) return docs || [];
+    return (docs || []).filter(function (d) {
+      return String(d.title || '').toLowerCase().indexOf(q) !== -1 ||
+        (d.tags || []).some(function (t) { return String(t).toLowerCase().indexOf(q) !== -1; }) ||
+        String(d.body || '').toLowerCase().indexOf(q) !== -1;
+    });
+  }
+
+  // All distinct tags across the vault, lowercased, sorted.
+  function allTags(docs) {
+    var seen = {};
+    (docs || []).forEach(function (d) {
+      (d.tags || []).forEach(function (t) {
+        var k = String(t).trim().toLowerCase();
+        if (k) seen[k] = true;
+      });
+    });
+    return Object.keys(seen).sort();
+  }
+
+  // Keep a question-history list trimmed to maxN entries, newest last.
+  function trimHistory(history, maxN) {
+    var h = history || [];
+    var n = maxN || 20;
+    return h.length > n ? h.slice(h.length - n) : h;
+  }
+
   function normalizeQuery(q) {
     return String(q || '').toLowerCase().replace(/\s+/g, ' ').replace(/[?!.,;:]+$/g, '').trim();
   }
@@ -244,6 +300,10 @@
     validateDoc: validateDoc,
     addDoc: addDoc,
     deleteDoc: deleteDoc,
+    duplicateDoc: duplicateDoc,
+    searchDocs: searchDocs,
+    allTags: allTags,
+    trimHistory: trimHistory,
     normalizeQuery: normalizeQuery,
     logGap: logGap,
     gapSummary: gapSummary,

@@ -42,6 +42,7 @@
       <div class="askbox">
         <svg class="ask-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
         <input type="text" id="qInput" placeholder="e.g. What is our refund policy?">
+        <select id="qTag" aria-label="Limit answers to a tag"><option value="">All tags</option></select>
         <button class="primary" id="qAsk">Ask</button>
       </div>
       <div class="tryrow">
@@ -51,6 +52,10 @@
         <button class="tryq" data-q="Do you offer delivery?">Delivery</button>
       </div>
       <div id="qOut" class="qout"></div>
+      <div class="qhist-wrap">
+        <div class="qhist-head"><h3>Recent questions</h3><button class="ghost small" id="qHistClear">Clear</button></div>
+        <div id="qHist" class="qhist"></div>
+      </div>
     </div>
   </div>
 
@@ -75,6 +80,7 @@
     </div>
     <div class="card">
       <h2>On the shelves <span class="muted" id="docCount"></span></h2>
+      <div class="docsearch"><input type="text" id="dSearch" placeholder="Search documents by title, tag, or content…" aria-label="Search documents" autocomplete="off"></div>
       <div id="docList" class="shelves"></div>
     </div>
   </div>
@@ -91,6 +97,7 @@
         </div>
         <button class="primary" id="faqGen">Generate FAQ</button>
         <button class="ghost" id="faqCopy">Copy all as text</button>
+        <button class="ghost" id="faqPrint">Print</button>
       </div>
       <div id="faqOut"><p class="muted">Click "Generate FAQ" to build one from your current documents.</p></div>
     </div>

@@ -6,14 +6,14 @@
 
   function $(id) { return document.getElementById(id); }
 
-  function defaultState() { return { docs: [], gaps: [] }; }
+  function defaultState() { return { docs: [], gaps: [], questions: [] }; }
 
   function load() {
     try {
       var raw = localStorage.getItem(LS_KEY);
       if (raw) {
         var s = JSON.parse(raw);
-        s.docs = s.docs || []; s.gaps = s.gaps || [];
+        s.docs = s.docs || []; s.gaps = s.gaps || []; s.questions = s.questions || [];
         return s;
       }
     } catch (e) {}
@@ -39,18 +39,35 @@
   });
 
   // ---------- ask ----------
-  function doAsk() {
-    var q = $('qInput').value.trim();
+  function recordQuestion(query, result) {
+    state.questions.push({
+      id: Z.uid('q'),
+      query: query,
+      at: new Date().toISOString(),
+      answered: !result.noMatch,
+      topDoc: result.noMatch ? null : (result.answers[0] && result.answers[0].title)
+    });
+    state.questions = Z.trimHistory(state.questions, 20);
+    save();
+    renderQHistory();
+  }
+
+  function doAsk(query) {
+    var q = (query != null ? query : $('qInput').value).trim();
     var out = $('qOut');
     if (!q) { out.innerHTML = '<div class="warnbox">Type a question first.</div>'; return; }
     if (!state.docs.length) {
       out.innerHTML = '<div class="warnbox">Your vault is empty — add some documents first (Documents tab), or load the samples.</div>';
       return;
     }
-    var r = Z.ask(state.docs, q, 3);
+    var tagFilter = $('qTag') ? $('qTag').value : '';
+    var r = Z.ask(state.docs, q, 3, tagFilter || null);
+    recordQuestion(q, r);
     if (r.noMatch) {
-      out.innerHTML = '<div class="warnbox"><strong>No good match in your documents.</strong> ' +
-        'Nobody has written this down yet — that\'s a knowledge gap worth closing.</div>' +
+      var reason = r.reason === 'notag'
+        ? 'No documents carry the tag <strong>' + esc(tagFilter) + '</strong>.'
+        : 'Nobody has written this down yet — that\'s a knowledge gap worth closing.';
+      out.innerHTML = '<div class="warnbox"><strong>No good match in your documents.</strong> ' + reason + '</div>' +
         '<button class="primary" id="gapLog">Log as knowledge gap</button>';
       $('gapLog').addEventListener('click', function () {
         Z.logGap(state.gaps, q);
@@ -69,8 +86,53 @@
     });
     out.innerHTML = html;
   }
-  $('qAsk').addEventListener('click', doAsk);
+  $('qAsk').addEventListener('click', function () { doAsk(); });
   $('qInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') doAsk(); });
+
+  // ---------- question history ----------
+  function fmtWhen(iso) {
+    var d = new Date(iso);
+    return isNaN(d) ? '' : d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  }
+
+  function renderQHistory() {
+    var box = $('qHist');
+    if (!box) return;
+    var list = state.questions.slice().reverse();
+    if (!list.length) {
+      box.innerHTML = '<p class="muted small">Questions you ask show up here — tap one to ask it again.</p>';
+      return;
+    }
+    box.innerHTML = list.map(function (q) {
+      return '<button class="qhist-item' + (q.answered ? '' : ' unanswered') + '" data-qid="' + esc(q.id) + '" title="Ask again">' +
+        '<span class="qh-q">' + esc(q.query) + '</span>' +
+        '<span class="qh-m">' + esc(fmtWhen(q.at)) +
+        (q.answered && q.topDoc ? ' · ' + esc(q.topDoc) : ' · no match') + '</span></button>';
+    }).join('');
+    box.querySelectorAll('[data-qid]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var found = null;
+        state.questions.forEach(function (q) { if (q.id === b.dataset.qid) found = q; });
+        if (found) { $('qInput').value = found.query; doAsk(found.query); }
+      });
+    });
+  }
+
+  $('qHistClear').addEventListener('click', function () {
+    state.questions = [];
+    save(); renderQHistory();
+  });
+
+  function refreshTagFilter() {
+    var sel = $('qTag');
+    if (!sel) return;
+    var cur = sel.value;
+    var tags = Z.allTags(state.docs);
+    sel.innerHTML = '<option value="">All tags</option>' + tags.map(function (t) {
+      return '<option value="' + esc(t) + '">' + esc(t) + '</option>';
+    }).join('');
+    if (tags.indexOf(cur) !== -1) sel.value = cur;
+  }
 
   // ---------- documents ----------
   $('dAdd').addEventListener('click', function () {
@@ -117,16 +179,24 @@
 
   function renderDocs() {
     $('docCount').textContent = '(' + state.docs.length + ')';
+    refreshTagFilter();
+    var q = $('dSearch') ? $('dSearch').value : '';
+    var visible = Z.searchDocs(state.docs, q);
     if (!state.docs.length) {
       $('docList').innerHTML = '<p class="muted">No documents yet. Add your first one above, or load the samples to try it out.</p>';
       return;
     }
+    if (!visible.length) {
+      $('docList').innerHTML = '<p class="muted">No documents match your search.</p>';
+      return;
+    }
     var html = '';
-    state.docs.forEach(function (d) {
+    visible.forEach(function (d) {
       var tags = (d.tags || []).map(function (t) { return '<span class="tag">' + esc(t) + '</span>'; }).join(' ');
       var words = d.body.split(/\s+/).length;
       html += '<div class="docitem"><div><div class="t">' + esc(d.title) + '</div>' +
         '<div class="m">' + words + ' words ' + tags + '</div></div>' +
+        '<button class="ghost small" data-copy-doc="' + esc(d.id) + '">Copy</button>' +
         '<button class="danger small" data-del-doc="' + esc(d.id) + '">Delete</button></div>';
     });
     $('docList').innerHTML = html;
@@ -137,7 +207,15 @@
         save(); renderDocs();
       });
     });
+    $('docList').querySelectorAll('[data-copy-doc]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        Z.duplicateDoc(state.docs, btn.dataset.copyDoc);
+        save(); renderDocs();
+      });
+    });
   }
+
+  $('dSearch').addEventListener('input', renderDocs);
 
   // ---------- FAQ ----------
   var lastFaqs = [];
@@ -159,6 +237,11 @@
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(t).then(function () { alert('FAQ copied to clipboard.'); });
     } else { prompt('Copy your FAQ:', t); }
+  });
+
+  $('faqPrint').addEventListener('click', function () {
+    if (!lastFaqs.length) { alert('Generate an FAQ first.'); return; }
+    window.print();
   });
 
   // ---------- gaps ----------
@@ -193,4 +276,5 @@
 
   renderDocs();
   renderGaps();
+  renderQHistory();
 })();
