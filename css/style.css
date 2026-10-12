@@ -271,3 +271,14 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   .answer .rel { position: static; display: inline-block; margin-bottom: 8px; }
   .answer .ttl { margin-right: 0; }
 }
+
+/* ---------- question autocomplete + related questions + gap terms ---------- */
+.qsuggest { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.sug { border: 1px solid var(--line); background: #fffdf8; padding: 6px 12px; font-size: 13px; color: var(--ink); text-align: left; }
+.sug:hover { border-color: var(--copper); color: var(--copper-deep); }
+.related { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 10px; }
+.rel-h { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .7px; color: var(--muted); margin-bottom: 8px; }
+.rel-q { display: block; width: 100%; text-align: left; background: none; border: none; padding: 6px 0; font-size: 14px; color: var(--copper-deep); text-decoration: underline; text-underline-offset: 3px; }
+.gapterms { margin-bottom: 16px; }
+.termchip { display: inline-block; border: 1px solid var(--line); background: #fffdf8; padding: 4px 10px; font-size: 13px; margin: 0 6px 6px 0; }
+.termchip b { color: var(--copper-deep); }

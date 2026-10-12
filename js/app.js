@@ -84,10 +84,46 @@
         '<div class="ttl">' + esc(a.title) + ' ' + tags + '</div>' +
         '<div class="ex">' + esc(a.excerpt || '(title match — open the document for full context)') + '</div></div>';
     });
+    var related = Z.relatedQuestions(state.questions, r.answers[0].title, q, 3);
+    if (related.length) {
+      html += '<div class="related"><div class="rel-h">People also asked</div>' +
+        related.map(function (rq) {
+          return '<button class="rel-q" data-rel="' + esc(rq) + '">' + esc(rq) + '</button>';
+        }).join('') + '</div>';
+    }
     out.innerHTML = html;
+    out.querySelectorAll('[data-rel]').forEach(function (b) {
+      b.addEventListener('click', function () { $('qInput').value = b.dataset.rel; doAsk(); });
+    });
   }
   $('qAsk').addEventListener('click', function () { doAsk(); });
   $('qInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') doAsk(); });
+
+  // ---------- question autocomplete from history ----------
+  function renderSuggest() {
+    var box = $('qSuggest');
+    if (!box) return;
+    var list = Z.suggestQuestions(state.questions, $('qInput').value, 5);
+    if (!list.length) { box.innerHTML = ''; box.style.display = 'none'; return; }
+    box.style.display = 'flex';
+    box._list = list;
+    box.innerHTML = list.map(function (qq, i) {
+      return '<button class="sug" data-sug="' + i + '">' + esc(qq) + '</button>';
+    }).join('');
+    box.querySelectorAll('[data-sug]').forEach(function (b) {
+      // mousedown beats the input's blur handler so the click lands
+      b.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        $('qInput').value = box._list[parseInt(b.dataset.sug, 10)];
+        box.style.display = 'none';
+        doAsk();
+      });
+    });
+  }
+  $('qInput').addEventListener('input', renderSuggest);
+  $('qInput').addEventListener('blur', function () {
+    setTimeout(function () { var b = $('qSuggest'); if (b) b.style.display = 'none'; }, 150);
+  });
 
   // ---------- question history ----------
   function fmtWhen(iso) {
@@ -251,7 +287,14 @@
       $('gapList').innerHTML = '<p class="muted">No gaps logged. Gaps appear when someone asks a question your documents can\'t answer — each one is a page your handbook is missing.</p>';
       return;
     }
-    var html = '<table><tr><th>Question asked</th><th>Times</th><th></th></tr>';
+    var terms = Z.gapTermStats(state.gaps, 8);
+    var termHtml = terms.length
+      ? '<div class="gapterms"><div class="rel-h">Most-asked-about missing topics — write these up first</div>' +
+        terms.map(function (t) {
+          return '<span class="termchip">' + esc(t.term) + ' <b>×' + t.count + '</b></span>';
+        }).join('') + '</div>'
+      : '';
+    var html = termHtml + '<table><tr><th>Question asked</th><th>Times</th><th></th></tr>';
     sum.forEach(function (g) {
       html += '<tr><td>' + esc(g.query) + '</td><td><strong>' + g.count + '×</strong></td>' +
         '<td><button class="ghost small" data-gap-resolve="' + esc(g.ids[0]) + '">Mark written up</button></td></tr>';

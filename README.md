@@ -16,6 +16,9 @@ A document vault with instant keyword Q&A: paste SOPs, price lists, policies, FA
 5. **Auto FAQ** — scans the vault for the most-mentioned topics and drafts FAQ entries from the best-matching sentences, with sources; one-click copy.
 7. **Tag-filtered Ask** — restrict answers to documents carrying a chosen tag.
 8. **Question history** — every question is logged with its answer status; tap one to re-ask.
+12. **Question autocomplete** — start typing and past questions appear as suggestions; one tap re-asks.
+13. **"People also asked"** — after an answer, related questions answered by the same document show up for one-tap follow-up.
+14. **Missing-topic analytics** — the gaps tab ranks the most-asked-about missing terms so you know what to write up first.
 9. **Vault search** — filter documents by title, tag, or content as you type.
 10. **Duplicate document** — clone a document as a starting point for a similar one.
 11. **FAQ print view** — print stylesheet turns the generated FAQ into a clean handout.

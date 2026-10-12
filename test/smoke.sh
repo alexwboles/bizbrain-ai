@@ -92,6 +92,39 @@ const th = Z.trimHistory([1, 2, 3, 4, 5], 3);
 (th.length === 3 && th[0] === 3 && Z.trimHistory(null, 3).length === 0)
   ? ok('trimHistory: keeps newest N, handles null') : bad('trimHistory');
 
+// 15: suggestQuestions returns prefix matches, newest first, deduped, capped
+const qs = [
+  { query: 'What is our refund policy?', answered: true, topDoc: 'Refund policy' },
+  { query: 'What are our opening hours?', answered: true, topDoc: 'Opening hours' },
+  { query: 'what is our refund policy?', answered: false, topDoc: null },
+  { query: 'Do you offer delivery?', answered: true, topDoc: 'Delivery' },
+  { query: 'What is our return window?', answered: true, topDoc: 'Refund policy' }
+];
+const sug = Z.suggestQuestions(qs, 'what', 5);
+(sug.length === 3 && sug[0] === 'What is our return window?' && sug[1] === 'what is our refund policy?')
+  ? ok('suggestQuestions: prefix match, newest-first, case-insensitive dedupe (newest casing wins)') : bad('suggest=' + JSON.stringify(sug));
+(Z.suggestQuestions(qs, '', 5).length === 0 && Z.suggestQuestions(qs, 'zzz', 5).length === 0)
+  ? ok('suggestQuestions: empty/no-match prefix -> []') : bad('suggest edges');
+
+// 16: relatedQuestions finds same-doc questions, excluding the current one
+const rel = Z.relatedQuestions(qs, 'Refund policy', 'What is our refund policy?', 3);
+(rel.length === 1 && rel[0] === 'What is our return window?')
+  ? ok('relatedQuestions: same topDoc, excludes current, skips unanswered') : bad('related=' + JSON.stringify(rel));
+(Z.relatedQuestions(qs, null, 'x').length === 0 && Z.relatedQuestions([], 'Refund policy', 'x').length === 0)
+  ? ok('relatedQuestions: null doc / empty history -> []') : bad('related edges');
+
+// 17: gapTermStats ranks missing-topic terms by frequency
+const gg = [];
+Z.logGap(gg, 'Do you fix iPhone screens?');
+Z.logGap(gg, 'Do you fix iPhone batteries?');
+Z.logGap(gg, 'What are your hours?');
+const gt = Z.gapTermStats(gg, 5);
+const gti = gt.filter(t => t.term === 'iphone')[0];
+(gt.length > 0 && gti && gti.count === 2 && gt[0].count === 2)
+  ? ok('gapTermStats: iphone is a top missing term (x2)') : bad('gapTerms=' + JSON.stringify(gt));
+(Z.gapTermStats([], 5).length === 0)
+  ? ok('gapTermStats: no gaps -> []') : bad('gapTerms empty');
+
 console.log('node checks: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
 EOF
@@ -103,11 +136,14 @@ const fs = require('fs');
 const h = fs.readFileSync('/home/hatch/workspace/bizbrain-ai/index.html', 'utf8');
 const a = fs.readFileSync('/home/hatch/workspace/bizbrain-ai/js/app.js', 'utf8');
 const c = fs.readFileSync('/home/hatch/workspace/bizbrain-ai/css/style.css', 'utf8');
-for (const id of ['qTag', 'qHist', 'qHistClear', 'dSearch', 'faqPrint']) {
+for (const id of ['qTag', 'qHist', 'qHistClear', 'dSearch', 'faqPrint', 'qSuggest']) {
   if (!h.includes('id="' + id + '"')) { console.log('missing ' + id); process.exit(1); }
 }
 if (!a.includes('duplicateDoc(state.docs') || !a.includes('renderQHistory()')) {
   console.log('app wiring missing'); process.exit(1);
+}
+if (!a.includes('suggestQuestions(state.questions') || !a.includes('relatedQuestions(state.questions') || !a.includes('gapTermStats(state.gaps')) {
+  console.log('new feature wiring missing'); process.exit(1);
 }
 if (!c.includes('@media print')) { console.log('print css missing'); process.exit(1); }
 console.log('ui wiring ok');

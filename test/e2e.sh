@@ -93,6 +93,25 @@ const s3 = Z.searchDocs(tdocs, 'policy');
   s3.length === 1 && s3[0].title === 'Refund policy')
   ? ok('flow11: search hits title, body, and tag case-insensitively') : bad('flow11');
 
+// Flow 12: autocomplete + related questions + gap terms work end to end
+const hist12 = [
+  { query: 'What is our refund policy?', answered: true, topDoc: 'Refund policy' },
+  { query: 'What is our return window?', answered: true, topDoc: 'Refund policy' },
+  { query: 'Do you offer delivery?', answered: true, topDoc: 'Delivery info' },
+  { query: 'Do you offer gift wrapping?', answered: false, topDoc: null }
+];
+const s12 = Z.suggestQuestions(hist12, 'do you', 5);
+const r12 = Z.relatedQuestions(hist12, 'Refund policy', 'What is our refund policy?', 3);
+const gaps12 = [];
+Z.logGap(gaps12, 'Do you fix iPhone screens?');
+Z.logGap(gaps12, 'do you fix iphone screens?');
+const t12 = Z.gapTermStats(gaps12, 3);
+const t12i = t12.filter(t => t.term === 'iphone')[0];
+(s12.length === 2 && s12[0] === 'Do you offer gift wrapping?' &&
+  r12.length === 1 && r12[0] === 'What is our return window?' &&
+  t12i && t12i.count === 2)
+  ? ok('flow12: suggest newest-first; related excludes current; gap terms count repeats') : bad('flow12');
+
 console.log('');
 console.log('e2e: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

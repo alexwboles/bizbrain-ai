@@ -242,6 +242,58 @@
       .sort(function (a, b) { return b.count - a.count; });
   }
 
+  // Suggest past questions as the user types: prefix matches, most recent
+  // first, deduped, capped at `limit` (default 5).
+  function suggestQuestions(questions, prefix, limit) {
+    var p = String(prefix || '').trim().toLowerCase();
+    if (!p) return [];
+    var n = limit || 5;
+    var seen = {}, out = [];
+    var list = (questions || []).slice().reverse();
+    for (var i = 0; i < list.length && out.length < n; i++) {
+      var q = String(list[i].query || '');
+      var k = q.toLowerCase();
+      if (k.indexOf(p) === 0 && !seen[k]) { seen[k] = true; out.push(q); }
+    }
+    return out;
+  }
+
+  // "People also asked": other answered questions whose top answer came from
+  // the same document. Most recent first, deduped, capped at `limit` (default 3).
+  function relatedQuestions(questions, topDoc, excludeQuery, limit) {
+    if (!topDoc) return [];
+    var n = limit || 3;
+    var ex = String(excludeQuery || '').toLowerCase();
+    var seen = {}, out = [];
+    var list = (questions || []).slice().reverse();
+    for (var i = 0; i < list.length && out.length < n; i++) {
+      var q = list[i];
+      if (!q.answered || !q.topDoc || q.topDoc !== topDoc) continue;
+      var qq = String(q.query || '');
+      var k = qq.toLowerCase();
+      if (k === ex || seen[k]) continue;
+      seen[k] = true;
+      out.push(qq);
+    }
+    return out;
+  }
+
+  // Which missing topics get asked about most: content-term frequencies over
+  // the logged knowledge gaps (repeats count — that's the signal).
+  // Returns [{ term, count }] sorted desc, capped at `limit` (default 8).
+  function gapTermStats(gaps, limit) {
+    var n = limit || 8;
+    var freq = {};
+    (gaps || []).forEach(function (g) {
+      tokenize(String(g.query || '')).forEach(function (t) {
+        freq[t] = (freq[t] || 0) + 1;
+      });
+    });
+    return Object.keys(freq).map(function (t) { return { term: t, count: freq[t] }; })
+      .sort(function (a, b) { return b.count - a.count; })
+      .slice(0, n);
+  }
+
   function resolveGap(gaps, id) {
     for (var i = gaps.length - 1; i >= 0; i--) {
       if (gaps[i].id === id) gaps.splice(i, 1);
@@ -307,6 +359,9 @@
     normalizeQuery: normalizeQuery,
     logGap: logGap,
     gapSummary: gapSummary,
+    suggestQuestions: suggestQuestions,
+    relatedQuestions: relatedQuestions,
+    gapTermStats: gapTermStats,
     resolveGap: resolveGap,
     exportJSON: exportJSON,
     importJSON: importJSON,
