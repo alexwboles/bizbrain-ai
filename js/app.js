@@ -6,6 +6,24 @@
 
   function $(id) { return document.getElementById(id); }
 
+  var lastAnswers = [];
+
+  function goTab(name) {
+    var btn = document.querySelector('.tabs button[data-tab="' + name + '"]');
+    if (btn) btn.click();
+  }
+
+  function highlightExcerpt(text, query) {
+    var tokens = Z.tokenize(query);
+    var h = esc(text);
+    tokens.forEach(function (t) {
+      if (t.length < 3) return;
+      var re = new RegExp('(' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+      h = h.replace(re, '<mark>$1</mark>');
+    });
+    return h;
+  }
+
   function defaultState() { return { docs: [], gaps: [], questions: [] }; }
 
   function load() {
@@ -79,12 +97,16 @@
     var html = '';
     var conf = Z.answerConfidence(r, q);
     html += '<div class="conf conf-' + conf.level + '">' + esc(conf.note) + '</div>';
+    lastAnswers = r.answers;
     r.answers.forEach(function (a, i) {
       var tags = (a.tags || []).map(function (t) { return '<span class="tag">' + esc(t) + '</span>'; }).join(' ');
-      html += '<div class="answer"><span class="rel">match ' + a.score + '</span>' +
-        '<div class="src">Answer ' + (i + 1) + ' · from</div>' +
-        '<div class="ttl">' + esc(a.title) + ' ' + tags + '</div>' +
-        '<div class="ex">' + esc(a.excerpt || '(title match — open the document for full context)') + '</div></div>';
+      html += '<div class="answer"><div class="ans-meta"><span class="src-chip">' + esc(a.title) + '</span>' +
+        tags + '<span class="rel">match ' + a.score + '</span></div>' +
+        '<div class="ex">' + highlightExcerpt(a.excerpt || '(title match — open the document for full context)', q) + '</div>' +
+        '<div class="ans-actions">' +
+        '<button class="ghost small" data-copy-ans="' + i + '">Copy answer</button>' +
+        '<button class="ghost small" data-open-doc="' + esc(a.title) + '">Open document</button>' +
+        '</div></div>';
     });
     var related = Z.relatedQuestions(state.questions, r.answers[0].title, q, 3);
     if (related.length) {
@@ -96,6 +118,24 @@
     out.innerHTML = html;
     out.querySelectorAll('[data-rel]').forEach(function (b) {
       b.addEventListener('click', function () { $('qInput').value = b.dataset.rel; doAsk(); });
+    });
+    out.querySelectorAll('[data-copy-ans]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var a = lastAnswers[parseInt(b.dataset.copyAns, 10)];
+        if (!a) return;
+        var t = 'Q: ' + q + '\nA (from ' + a.title + '): ' + (a.excerpt || '');
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t);
+        b.textContent = 'Copied';
+        setTimeout(function () { b.textContent = 'Copy answer'; }, 1400);
+      });
+    });
+    out.querySelectorAll('[data-open-doc]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        goTab('docs');
+        var ds = $('dSearch');
+        ds.value = b.dataset.openDoc;
+        ds.dispatchEvent(new Event('input'));
+      });
     });
   }
   $('qAsk').addEventListener('click', function () { doAsk(); });
@@ -341,6 +381,69 @@
     state.gaps = [];
     save(); renderGaps();
   });
+
+  // ---------- vault health rail (right side of Ask) ----------
+  function renderHealth() {
+    var hr = $('healthRows');
+    if (!hr) return;
+    var summary = Z.gapSummary(state.gaps);
+    var rows = [
+      { label: 'Documents shelved', n: state.docs.length, tab: 'docs' },
+      { label: 'Questions asked', n: state.questions.length, tab: 'ask' },
+      { label: 'Open gaps', n: summary.length, tab: 'gaps' },
+      { label: 'Stale — needs review', n: Z.staleDocs(state.docs, 180).length, tab: 'docs' },
+      { label: 'Possible duplicates', n: Z.findSimilar(state.docs, 0.5).length, tab: 'docs' }
+    ];
+    hr.innerHTML = rows.map(function (r) {
+      return '<button class="hrow" data-htab="' + r.tab + '"><span class="hn">' + r.n + '</span>' +
+        '<span class="hl">' + esc(r.label) + '</span></button>';
+    }).join('');
+    hr.querySelectorAll('[data-htab]').forEach(function (b) {
+      b.addEventListener('click', function () { goTab(b.dataset.htab); });
+    });
+
+    var terms = Z.gapTermStats(state.gaps, 6);
+    var ht = $('healthTerms');
+    if (ht) {
+      ht.innerHTML = terms.length
+        ? terms.map(function (t) {
+            return '<button class="termchip" data-htab="gaps">' + esc(t.term) + ' <b>×' + t.count + '</b></button>';
+          }).join('')
+        : '<p class="muted small">No gaps yet — ask something the vault can\'t answer.</p>';
+      ht.querySelectorAll('[data-htab]').forEach(function (b) {
+        b.addEventListener('click', function () { goTab('gaps'); });
+      });
+    }
+
+    var nd = $('navDocCount'), ng = $('navGapCount');
+    if (nd) nd.textContent = state.docs.length ? String(state.docs.length) : '';
+    if (ng) ng.textContent = summary.length ? String(summary.length) : '';
+  }
+
+  // ---------- global command bar ----------
+  var cmd = $('cmdAsk');
+  if (cmd) {
+    cmd.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && cmd.value.trim()) {
+        $('qInput').value = cmd.value.trim();
+        cmd.value = '';
+        goTab('ask');
+        doAsk();
+      }
+    });
+  }
+  document.addEventListener('keydown', function (e) {
+    var tag = (document.activeElement && document.activeElement.tagName) || '';
+    if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test(tag)) {
+      e.preventDefault();
+      if (cmd) cmd.focus();
+    }
+  });
+
+  var _renderDocs = renderDocs, _renderGaps = renderGaps, _renderQHistory = renderQHistory;
+  renderDocs = function () { _renderDocs(); renderHealth(); };
+  renderGaps = function () { _renderGaps(); renderHealth(); };
+  renderQHistory = function () { _renderQHistory(); renderHealth(); };
 
   renderDocs();
   renderGaps();

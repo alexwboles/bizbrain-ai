@@ -173,6 +173,20 @@ if (!c.includes('.conf-strong') || !c.includes('.vault-strip')) {
   console.log('confidence/vault css missing'); process.exit(1);
 }
 if (!c.includes('@media print')) { console.log('print css missing'); process.exit(1); }
+// redesign: command bar, health rail, citation answer cards, sidebar nav
+for (const id of ['cmdAsk', 'healthRows', 'healthTerms', 'navDocCount', 'navGapCount']) {
+  if (!h.includes('id="' + id + '"')) { console.log('redesign missing ' + id); process.exit(1); }
+}
+for (const fn of ['renderHealth', 'highlightExcerpt', 'goTab', 'lastAnswers', 'data-copy-ans', 'data-open-doc']) {
+  if (!a.includes(fn)) { console.log('redesign wiring missing ' + fn); process.exit(1); }
+}
+if (!h.includes('data-tab="ask"') || !h.includes('class="sidebar"') || !h.includes('class="cmdbar"')) {
+  console.log('redesign shell missing'); process.exit(1);
+}
+if (!c.includes('.sidebar') || !c.includes('.cmdbar') || !c.includes('.answer') || !c.includes('.health-rail')) {
+  console.log('redesign css missing'); process.exit(1);
+}
+if (/border-radius:\s*[1-9]/.test(c)) { console.log('rounded corners found in css'); process.exit(1); }
 console.log('ui wiring ok');
 EOF2
 [ $? -eq 0 ] && ok "new controls wired (qTag, qHist, dSearch, faqPrint, duplicate)" || bad "new controls wiring"
