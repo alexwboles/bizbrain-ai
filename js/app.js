@@ -77,6 +77,8 @@
       return;
     }
     var html = '';
+    var conf = Z.answerConfidence(r, q);
+    html += '<div class="conf conf-' + conf.level + '">' + esc(conf.note) + '</div>';
     r.answers.forEach(function (a, i) {
       var tags = (a.tags || []).map(function (t) { return '<span class="tag">' + esc(t) + '</span>'; }).join(' ');
       html += '<div class="answer"><span class="rel">match ' + a.score + '</span>' +
@@ -213,6 +215,12 @@
     $('dImport').value = '';
   });
 
+  function ageText(iso) {
+    var days = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
+    if (days < 30) return days + 'd old';
+    return Math.floor(days / 30) + ' mo old';
+  }
+
   function renderDocs() {
     $('docCount').textContent = '(' + state.docs.length + ')';
     refreshTagFilter();
@@ -226,7 +234,24 @@
       $('docList').innerHTML = '<p class="muted">No documents match your search.</p>';
       return;
     }
-    var html = '';
+    // Vault health: stale documents + possible duplicates, shown above the shelves.
+    var strips = '';
+    var stale = Z.staleDocs(state.docs, 180);
+    if (stale.length) {
+      strips += '<div class="vault-strip stale"><div class="vs-h">Needs review — older than 6 months</div>' +
+        stale.map(function (d) {
+          return '<div class="vs-row"><span>' + esc(d.title) + '</span><span class="muted small">' + ageText(d.createdAt) + '</span></div>';
+        }).join('') + '</div>';
+    }
+    var sims = Z.findSimilar(state.docs, 0.5);
+    if (sims.length) {
+      strips += '<div class="vault-strip sim"><div class="vs-h">Possible duplicates — same content in two places</div>' +
+        sims.slice(0, 5).map(function (p) {
+          return '<div class="vs-row"><span>' + esc(p.a.title) + ' ↔ ' + esc(p.b.title) + '</span>' +
+            '<span class="muted small">' + Math.round(p.sim * 100) + '% similar</span></div>';
+        }).join('') + '</div>';
+    }
+    var html = strips;
     visible.forEach(function (d) {
       var tags = (d.tags || []).map(function (t) { return '<span class="tag">' + esc(t) + '</span>'; }).join(' ');
       var words = d.body.split(/\s+/).length;

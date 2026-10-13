@@ -125,6 +125,27 @@ const gti = gt.filter(t => t.term === 'iphone')[0];
 (Z.gapTermStats([], 5).length === 0)
   ? ok('gapTermStats: no gaps -> []') : bad('gapTerms empty');
 
+// 18: answerConfidence / staleDocs / findSimilar edge cases
+const Z2 = Z;
+(Z2.answerConfidence({ answers: [], noMatch: true, reason: 'nomatch' }, 'q').level === 'none' &&
+  Z2.answerConfidence({ answers: [{ score: 12 }], noMatch: false }, 'q').level === 'strong' &&
+  Z2.answerConfidence({ answers: [{ score: 4 }, { score: 3 }], noMatch: false }, 'q').level === 'partial' &&
+  Z2.answerConfidence({ answers: [{ score: 1 }], noMatch: false }, 'q').level === 'thin')
+  ? ok('answerConfidence: none/strong/partial/thin levels') : bad('answerConfidence');
+(Z2.staleDocs([{ createdAt: '2025-06-01T00:00:00Z' }], 180, '2026-10-13T00:00:00Z').length === 1 &&
+  Z2.staleDocs([{ createdAt: '2026-09-01T00:00:00Z' }], 180, '2026-10-13T00:00:00Z').length === 0 &&
+  Z2.staleDocs([], 180, '2026-10-13T00:00:00Z').length === 0)
+  ? ok('staleDocs: old flagged, fresh kept, empty safe') : bad('staleDocs');
+const sd = [
+  { id: 'a', title: 'Refund policy', body: 'We offer a 30-day money-back guarantee on all services.' },
+  { id: 'b', title: 'Refund policy (v2)', body: 'We offer a 30-day money-back guarantee on all services, no questions asked.' },
+  { id: 'c', title: 'Opening hours', body: 'Open Monday to Friday 9am to 5pm.' }
+];
+const sp = Z2.findSimilar(sd, 0.5);
+(sp.length === 1 && sp[0].a.id === 'a' && sp[0].b.id === 'b' && sp[0].sim >= 0.5 &&
+  Z2.findSimilar(sd, 0.99).length === 0)
+  ? ok('findSimilar: near-duplicate pair flagged, high threshold finds none') : bad('findSimilar=' + JSON.stringify(sp));
+
 console.log('node checks: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);
 EOF
@@ -144,6 +165,12 @@ if (!a.includes('duplicateDoc(state.docs') || !a.includes('renderQHistory()')) {
 }
 if (!a.includes('suggestQuestions(state.questions') || !a.includes('relatedQuestions(state.questions') || !a.includes('gapTermStats(state.gaps')) {
   console.log('new feature wiring missing'); process.exit(1);
+}
+if (!a.includes('answerConfidence(') || !a.includes('staleDocs(state.docs') || !a.includes('findSimilar(state.docs')) {
+  console.log('vault health wiring missing'); process.exit(1);
+}
+if (!c.includes('.conf-strong') || !c.includes('.vault-strip')) {
+  console.log('confidence/vault css missing'); process.exit(1);
 }
 if (!c.includes('@media print')) { console.log('print css missing'); process.exit(1); }
 console.log('ui wiring ok');

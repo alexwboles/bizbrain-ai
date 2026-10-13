@@ -112,6 +112,28 @@ const t12i = t12.filter(t => t.term === 'iphone')[0];
   t12i && t12i.count === 2)
   ? ok('flow12: suggest newest-first; related excludes current; gap terms count repeats') : bad('flow12');
 
+// Flow 13: answer confidence levels
+const confDocs = [];
+Z.addDoc(confDocs, { title: 'Refund policy', body: 'We offer a 30-day money-back guarantee on all services. Email support with your receipt number. Refunds process within 5 business days. Custom orders non-refundable once started.' });
+Z.addDoc(confDocs, { title: 'Opening hours', body: 'Open Monday to Friday 9am to 5pm. Saturdays 10am to 2pm. Closed Sundays and public holidays. Bookings online anytime.' });
+const rc13s = Z.ask(confDocs, 'what is the refund policy and how do refunds process', 3);
+const c13s = Z.answerConfidence(rc13s, 'what is the refund policy and how do refunds process');
+const rc13t = Z.ask(confDocs, 'sundays holiday bookings', 3);
+const c13t = Z.answerConfidence(rc13t, 'sundays holiday bookings');
+const c13n = Z.answerConfidence({ answers: [], noMatch: true, reason: 'nomatch' }, 'zzz');
+(c13s.level === 'strong' && c13t.level !== 'strong' && c13n.level === 'none')
+  ? ok('flow13: strong/partial/none confidence from score spread') : bad('flow13 ' + JSON.stringify([c13s.level, c13t.level, c13n.level]));
+
+// Flow 14: stale docs + near-duplicate detection
+const d14a = { id: 'old-1', title: 'Winter hours 2025', body: 'Winter hours were Monday to Friday 10am to 4pm.', createdAt: '2025-01-05T12:00:00.000Z' };
+const d14b = { id: 'new-1', title: 'Opening hours', body: 'Open Monday to Friday 9am to 5pm. Saturdays 10am to 2pm.', createdAt: '2026-10-01T12:00:00.000Z' };
+const d14c = { id: 'new-2', title: 'Opening hours copy', body: 'Open Monday to Friday 9am to 5pm. Saturdays 10am to 2pm. Closed Sundays.', createdAt: '2026-10-02T12:00:00.000Z' };
+const stale14 = Z.staleDocs([d14a, d14b, d14c], 180, '2026-10-13T12:00:00.000Z');
+const sim14 = Z.findSimilar([d14a, d14b, d14c], 0.4);
+(stale14.length === 1 && stale14[0].id === 'old-1' &&
+  sim14.length === 1 && sim14[0].a.id === 'new-1' && sim14[0].b.id === 'new-2' && sim14[0].sim >= 0.5)
+  ? ok('flow14: 180-day stale detection; near-duplicate pair flagged with sim score') : bad('flow14 ' + JSON.stringify({ stale: stale14.length, sim: sim14.length }));
+
 console.log('');
 console.log('e2e: ' + pass + ' passed, ' + fail + ' failed');
 process.exit(fail ? 1 : 0);

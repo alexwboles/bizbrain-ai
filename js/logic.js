@@ -294,6 +294,65 @@
       .slice(0, n);
   }
 
+  // Answer confidence: how much to trust the top answer.
+  // strong: top score >= 8 and at least 2x the runner-up.
+  // partial: top score >= 3. thin: anything below that still returned a doc.
+  // Returns { level, note } — level 'none' when there was no match.
+  function answerConfidence(result, query) {
+    if (!result || result.noMatch || !result.answers.length) {
+      return { level: 'none', note: 'No match found in your documents.' };
+    }
+    var top = result.answers[0].score;
+    var second = result.answers.length > 1 ? result.answers[1].score : 0;
+    if (top >= 8 && top >= 2 * Math.max(second, 1)) {
+      return { level: 'strong', note: 'Strong match — the top document covers your question well.' };
+    }
+    if (top >= 3) {
+      return { level: 'partial', note: 'Partial match — check the excerpt covers what you need.' };
+    }
+    return { level: 'thin', note: 'Thin match — the vault barely mentions this. Consider logging it as a knowledge gap.' };
+  }
+
+  // Documents older than `daysOld` days (default 180), oldest first —
+  // review candidates for a vault that should stay current.
+  // `nowISO` is injectable for tests.
+  function staleDocs(docs, daysOld, nowISO) {
+    var days = daysOld == null ? 180 : daysOld;
+    var now = nowISO ? new Date(nowISO).getTime() : Date.now();
+    return (docs || [])
+      .filter(function (d) {
+        return d.createdAt && (now - new Date(d.createdAt).getTime()) / 86400000 >= days;
+      })
+      .sort(function (a, b) { return new Date(a.createdAt) - new Date(b.createdAt); });
+  }
+
+  // Near-duplicate detection: Jaccard similarity over the token sets of
+  // title + body. Returns [{ a, b, sim }] with sim >= threshold (default 0.5),
+  // sim as 0–1 rounded to 2 dp, sorted most-similar first.
+  function findSimilar(docs, threshold) {
+    var th = threshold == null ? 0.5 : threshold;
+    var list = docs || [];
+    var sets = list.map(function (d) {
+      var s = {};
+      tokenize((d.title || '') + ' ' + (d.body || '')).forEach(function (t) { s[t] = true; });
+      return s;
+    });
+    var out = [];
+    for (var i = 0; i < list.length; i++) {
+      for (var j = i + 1; j < list.length; j++) {
+        var a = sets[i], b = sets[j];
+        var ka = Object.keys(a);
+        var inter = 0;
+        ka.forEach(function (k) { if (b[k]) inter++; });
+        var union = ka.length + Object.keys(b).length - inter;
+        var sim = union ? inter / union : 0;
+        if (sim >= th) out.push({ a: list[i], b: list[j], sim: Math.round(sim * 100) / 100 });
+      }
+    }
+    out.sort(function (x, y) { return y.sim - x.sim; });
+    return out;
+  }
+
   function resolveGap(gaps, id) {
     for (var i = gaps.length - 1; i >= 0; i--) {
       if (gaps[i].id === id) gaps.splice(i, 1);
@@ -362,6 +421,9 @@
     suggestQuestions: suggestQuestions,
     relatedQuestions: relatedQuestions,
     gapTermStats: gapTermStats,
+    answerConfidence: answerConfidence,
+    staleDocs: staleDocs,
+    findSimilar: findSimilar,
     resolveGap: resolveGap,
     exportJSON: exportJSON,
     importJSON: importJSON,

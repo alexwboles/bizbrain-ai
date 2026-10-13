@@ -19,6 +19,8 @@ A document vault with instant keyword Q&A: paste SOPs, price lists, policies, FA
 12. **Question autocomplete** — start typing and past questions appear as suggestions; one tap re-asks.
 13. **"People also asked"** — after an answer, related questions answered by the same document show up for one-tap follow-up.
 14. **Missing-topic analytics** — the gaps tab ranks the most-asked-about missing terms so you know what to write up first.
+15. **Answer confidence** — every answer carries a Strong / Partial / Thin confidence badge, derived from the match score spread, so readers know how much to trust it.
+16. **Vault health** — documents older than 6 months are flagged "needs review"; near-duplicate documents are detected (Jaccard similarity) and listed with a similarity score.
 9. **Vault search** — filter documents by title, tag, or content as you type.
 10. **Duplicate document** — clone a document as a starting point for a similar one.
 11. **FAQ print view** — print stylesheet turns the generated FAQ into a clean handout.
