@@ -37,7 +37,7 @@
     } catch (e) {}
     return defaultState();
   }
-  function save() { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+  function save() { try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* storage blocked/full: non-fatal */ } }
   var state = load();
 
   function esc(s) {
